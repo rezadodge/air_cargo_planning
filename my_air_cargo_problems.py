@@ -8,14 +8,12 @@ from lp_utils import (
     FluentState, encode_state, decode_state,
 )
 from my_planning_graph import PlanningGraph
-
 from functools import lru_cache
 
 
 class AirCargoProblem(Problem):
     def __init__(self, cargos, planes, airports, initial: FluentState, goal: list):
         """
-
         :param cargos: list of str
             cargos in the problem
         :param planes: list of str
@@ -126,9 +124,30 @@ class AirCargoProblem(Problem):
             e.g. 'FTTTFF'
         :return: list of Action objects
         """
-        # TODO implement
+        # This should work
         possible_actions = []
+        kb = PropKB()
+        kb.tell(decode_state(state, self.state_map).pos_sentence())
+        for action in self.actions_list:
+            not_possible = [True for clause in action.precond_pos if clause not in kb.clauses]
+            if not_possible:
+                continue
+            not_possible = [True for clause in action.precond_neg if clause in kb.clauses]
+            if not_possible:
+                continue
+            possible_actions.append(action)
+        """
+        # But perhaps a better way is to use next
+        for action in self.actions_list:
+            item = next((clause for clause in action.precond_pos if clause not in kb.clauses), None)
+            if item is None:
+                item = next((clause for clause in action.precond_neg if clause in kb.clauses), None)
+                if item is None:
+                    possible_actions.append(action)
+        """
+
         return possible_actions
+
 
     def result(self, state: str, action: Action):
         """ Return the state that results from executing the given
@@ -139,9 +158,35 @@ class AirCargoProblem(Problem):
         :param action: Action applied
         :return: resulting state after action
         """
-        # TODO implement
+        # This from example_have_cake.py should work
         new_state = FluentState([], [])
+        old_state = decode_state(state, self.state_map)
+        for fluent in old_state.pos:
+            if fluent not in action.effect_rem:
+                new_state.pos.append(fluent)
+        for fluent in action.effect_add:
+            if fluent not in new_state.pos:
+                new_state.pos.append(fluent)
+        for fluent in old_state.neg:
+            if fluent not in action.effect_add:
+                new_state.neg.append(fluent)
+        for fluent in action.effect_rem:
+            if fluent not in new_state.neg:
+                new_state.neg.append(fluent)
+        """
+        # This may be a better way, how much depends on the size
+        pos_fluents = set(old_state.pos)
+        pos_fluents.difference_update(action.effect_rem)
+        pos_fluents.update(action.effect_add)
+        new_state.pos.extend(pos_fluents)
+        neg_fluents = set(old_state.neg)
+        neg_fluents.difference_update(action.effect_add)
+        neg_fluents.update(action.effect_rem)
+        new_state.neg.extend(neg_fluents)
+        """
+
         return encode_state(new_state, self.state_map)
+
 
     def goal_test(self, state: str) -> bool:
         """ Test the state to see if goal is reached
