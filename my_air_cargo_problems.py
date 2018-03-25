@@ -279,13 +279,15 @@ class AirCargoProblem(Problem):
         count = 0
         kb = PropKB()
         kb.tell(decode_state(node.state, self.state_map).pos_sentence())
+        """
         for clause in self.goal:
             if clause not in kb.clauses:
                 count += 1
         return count
+        """
         # One-line comprehension implementation
-        #count = sum(True for clause in self.goal if clause not in kb.clauses)
-        #return count
+        count = sum(True for clause in self.goal if clause not in kb.clauses)
+        return count
 
 
 def air_cargo_p1() -> AirCargoProblem:
