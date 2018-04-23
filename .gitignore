@@ -2,6 +2,8 @@
 __pycache__
 *.pyc
 *.zip
+*.docx
+*.pdf
 *.json
 .idea/
 tests/.cache/v/cache/lastfailed
